@@ -7,8 +7,7 @@ jdk 'JDK21' // name must match a JDK install under Manage
 Jenkins > Tools
 }
 environment {
-DOCKERHUB_CRED_ID = 'docker' // Jenkins
-credential ID (Docker Hub username/token)
+DOCKERHUB_CRED_ID = 'docker' // Jenkins credential ID (Docker Hub username/token)
 DOCKERHUB_REPO = 'your-dockerhub-username/simple-docker-webapp'
 IMAGE_TAG = "${env.BUILD_NUMBER}"
 CONTAINER_NAME = 'simple-docker-webapp'
@@ -25,8 +24,8 @@ git branch: 'main', url: 'https://github.com/poddar122681/simple-docker-webapp.g
 }
 }
 stage('Build & Test (Maven)') {
-steps {
-sh 'mvn -B clean verify'
+   steps {
+      sh 'mvn -B clean verify'
 }
 post {
 always {
@@ -36,8 +35,8 @@ allowEmptyResults: true
 }
 }
 stage('SonarQube Analysis') {
-steps {
-withSonarQubeEnv('sonarqube') { // configured under Manage
+   steps {
+      withSonarQubeEnv('sonarqube') { // configured under Manage
 Jenkins > System > SonarQube servers
 sh '''
 mvn -B sonar:sonar \
@@ -48,21 +47,21 @@ mvn -B sonar:sonar \
 }
 }
 stage('Quality Gate') {
-steps {
-timeout(time: 5, unit: 'MINUTES') {
+   steps {
+      timeout(time: 5, unit: 'MINUTES') {
 waitForQualityGate abortPipeline: true
 }
 }
 }
 stage('Build Docker Image') {
-steps {
-sh "docker build -t ${DOCKERHUB_REPO}:${IMAGE_TAG} -t
+   steps {
+      sh "docker build -t ${DOCKERHUB_REPO}:${IMAGE_TAG} -t
 ${DOCKERHUB_REPO}:latest ."
 }
 }
 stage('Push to Docker Hub') {
-steps {
-withCredentials([usernamePassword(credentialsId:
+   steps {
+      withCredentials([usernamePassword(credentialsId:
 DOCKERHUB_CRED_ID, usernameVariable: 'DOCKER_USER', passwordVariable:
 'DOCKER_PASS')]) {
 sh '''
@@ -76,8 +75,8 @@ docker logout
 }
 }
 stage('Deploy') {
-steps {
-sh """
+   steps {
+      sh """
 docker pull "$DOCKERHUB-REPO:$IMAGE_TAG"
 docker stop simple-docker-webapp|| true
 docker rm simple-docker-webapp|| true
@@ -86,8 +85,8 @@ docker run -d --name simple-docker-webapp-p 80801:8080 -restart unless-stopped $
 }
 }
 stage('Health Check') {
-steps {
-sh """
+   steps {
+      sh """
 for i in \$(seq 1 10); do
 if curl -sf
 http://localhost:8081/actuator/health; then
