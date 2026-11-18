@@ -83,15 +83,21 @@ docker run -d --name simple-docker-webapp -p 80801:8080 --restart unless-stopped
 """
 }
 }
-stage(‘Health Check’) {
-          steps {
-              sh “”"
-                 for i in \$(seq 1 10); do
-                     if curl -sf http://localhost:8081/actuator/health; then
-                          echo ‘App is healthy’
-                          '''
-            }
-        }
+  stage('Health Check') {
+    steps {
+        sh '''
+            for i in $(seq 1 10); do
+                if curl -sf http://localhost:8081/actuator/health; then
+                    echo 'App is healthy'
+                    exit 0
+                fi
+
+                echo "Waiting for application... ($i/10)"
+                sleep 5
+            done
+
+            echo 'App health check failed'
+            exit 1
+        '''
     }
-}
-                  
+}               
