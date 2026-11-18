@@ -15,7 +15,7 @@ pipeline {
 
         stage('Compile') {
             steps {
-                sh 'mvn clean compile'
+                sh 'mvn clean compile -Dmaven.compiler.source=17 -Dmaven.compiler.target=17 -Dmaven.compiler.release=17'
             }
         }
 
