@@ -21,4 +21,3 @@ sh "docker logout"
 }
 }
 }
-}
