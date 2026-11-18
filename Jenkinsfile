@@ -83,35 +83,10 @@ docker run -d --name simple-docker-webapp -p 80801:8080 --restart unless-stopped
 """
 }
 }
-stage('Health Check') {
-   steps {
-      sh """
-for i in \$(seq 1 10); do
-if curl -sf
-http://localhost:8081/actuator/health; then
-echo 'App is healthy'
-exit 0
-fi
-echo 'Waiting for app to become healthy...'
-sleep 5
-done
-echo 'Health check failed after retries'
-exit 1
-"""
-}
-}
-}
-post {
-success {
-echo "Built ${DOCKERHUB_REPO}:${IMAGE_TAG}, pushed to Docker Hub,
-}
-and deployed locally"
-}
-failure {
-echo 'Pipeline failed — check console output above.'
-}
-always {
-sh 'docker image prune -f || true'
-}
-}
-}
+stage(‘Health Check’) {
+          steps {
+              sh “”"
+                 for i in \$(seq 1 10); do
+                     if curl -sf http://localhost:8081/actuator/health; then
+                          echo ‘App is healthy’
+                          exit 0
