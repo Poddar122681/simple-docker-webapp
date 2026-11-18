@@ -91,6 +91,3 @@ echo 'App is healthy'
 }
 }
 }
-}
-}
-  
