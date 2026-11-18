@@ -80,24 +80,17 @@ docker pull "$DOCKERHUB-REPO:$IMAGE_TAG"
 docker stop simple-docker-webapp|| true
 docker rm simple-docker-webapp|| true
 docker run -d --name simple-docker-webapp -p 80801:8080 --restart unless-stopped ${DOCKERHUB_REPO}:${IMAGE_TAG}
-"""
+stage('Health Check') {
+steps {
+sh '''
+sleep 10
+curl -sf http://localhost:8081/actuator/health
+echo 'App is healthy'
+'''
 }
 }
-  stage('Health Check') {
-    steps {
-        sh '''
-            for i in $(seq 1 10); do
-                if curl -sf http://localhost:8081/actuator/health; then
-                    echo 'App is healthy'
-                    exit 0
-                fi
-
-                echo "Waiting for application... ($i/10)"
-                sleep 5
-            done
-
-            echo 'App health check failed'
-            exit 1
-        '''
-    }
-}               
+}
+}
+}
+}
+  
