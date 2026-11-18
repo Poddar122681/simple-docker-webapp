@@ -15,13 +15,11 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=simple-docker-webapp \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://172.31.44.216:9000
-                    '''
+                script {
+                    def scannerHome = tool 'sonar-scanner'
+                    withSonarQubeEnv('sonarqube') {
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=simple-docker-webapp -Dsonar.sources=."
+                    }
                 }
             }
         }
