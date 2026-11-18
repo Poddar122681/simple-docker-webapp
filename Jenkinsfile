@@ -79,7 +79,7 @@ stage('Deploy') {
 docker pull "$DOCKERHUB-REPO:$IMAGE_TAG"
 docker stop simple-docker-webapp|| true
 docker rm simple-docker-webapp|| true
-docker run -d --name simple-docker-webapp -p 80801:8080 --restart unless-stopped ${DOCKERHUB_REPO:${IMAGE_TAG}
+docker run -d --name simple-docker-webapp -p 80801:8080 --restart unless-stopped ${DOCKERHUB_REPO}:${IMAGE_TAG}
 """
 }
 }
