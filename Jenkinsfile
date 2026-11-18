@@ -89,7 +89,9 @@ stage(‘Health Check’) {
                  for i in \$(seq 1 10); do
                      if curl -sf http://localhost:8081/actuator/health; then
                           echo ‘App is healthy’
-                          exit 0
-                          }
-                          }
-                          }
+                          '''
+            }
+        }
+    }
+}
+                  
