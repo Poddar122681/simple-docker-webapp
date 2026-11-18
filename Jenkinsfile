@@ -21,4 +21,3 @@ sh "sudo docker logout"
 }
 }
 }
-}
