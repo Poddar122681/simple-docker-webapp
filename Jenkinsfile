@@ -90,3 +90,6 @@ stage(‘Health Check’) {
                      if curl -sf http://localhost:8081/actuator/health; then
                           echo ‘App is healthy’
                           exit 0
+                          }
+                          }
+                          }
