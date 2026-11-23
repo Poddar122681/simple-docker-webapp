@@ -1,52 +1,121 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-17'
+    }
+
     environment {
-        DOCKER_IMAGE = 'poddar122681/simple-docker-webapp'
-        DOCKER_TAG = 'latest'
+        DOCKERHUB = 'poddar122681/simple-docker-webappp'
+        IMAGE_TAG = 'latest'
     }
 
     stages {
-        stage('Checkout SCM') {
+        // --- YOUR STAGE 1 ---
+        stage('Declarative: Checkout SCM') {
             steps {
+                echo '=== DECLARATIVE CHECKOUT SCM ==='
                 checkout scm
             }
         }
 
+        // --- YOUR STAGE 2 ---
+        stage('Checkout SCM') {
+            steps {
+                echo '=== CHECKOUT SCM ==='
+                git branch: 'main', url: 'https://github.com/poddar122681/simple-docker-webappp.git'
+            }
+        }
+
+        // --- YOUR STAGE 3 ---
         stage('Compile') {
             steps {
-                sh 'mvn clean compile -Dmaven.compiler.source=17 -Dmaven.compiler.target=17 -Dmaven.compiler.release=17'
+                echo '=== COMPILE ==='
+                sh 'mvn compile'
             }
         }
 
+        // --- MISSING 1 - FROM FRIEND ---
+        stage('Build & Test (Maven)') {
+            steps {
+                echo '=== BUILD & TEST ==='
+                sh 'mvn clean package'
+            }
+        }
+
+        // --- YOUR STAGE 4 ---
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def scannerHome = tool 'sonar-scanner'
-                    withSonarQubeEnv('sonarqube') {
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=simple-docker-webapp -Dsonar.sources=. -Dsonar.java.binaries=target/classes"
-                    }
+                echo '=== SONARQUBE ANALYSIS ==='
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
 
+        // --- MISSING 2 - FROM FRIEND ---
+        stage('Quality Gate') {
+            steps {
+                echo '=== QUALITY GATE ==='
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        // --- YOUR STAGE 5 ---
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                echo '=== BUILD DOCKER IMAGE ==='
+                sh 'docker build -t $DOCKERHUB:$IMAGE_TAG .'
+            }
+        }
+
+        // --- YOUR STAGE 6 ---
+        stage('Push to Docker Hub') {
+            steps {
+                echo '=== PUSH TO DOCKER HUB ==='
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'U', passwordVariable: 'P')]) {
+                    sh 'echo $P | docker login -u $U --password-stdin'
+                    sh 'docker push $DOCKERHUB:$IMAGE_TAG'
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        // --- MISSING 3 - FROM FRIEND ---
+        stage('Deploy') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    }
-                }
+                echo '=== DEPLOY ==='
+                sh 'docker stop webapp || true'
+                sh 'docker rm webapp || true'
+                sh 'docker run -d --name webapp -p 8081:8080 $DOCKERHUB:$IMAGE_TAG'
+                sh 'docker ps | grep webapp'
             }
+        }
+
+        // --- MISSING 4 - FROM FRIEND ---
+        stage('Health Check') {
+            steps {
+                echo '=== HEALTH CHECK ==='
+                sh 'sleep 5'
+                sh 'curl -f http://localhost:8081/'
+                echo 'App is UP - Health Check Passed'
+            }
+        }
+    }
+
+    // --- MISSING 5 - FROM FRIEND ---
+    post {
+        success {
+            echo 'PIPELINE SUCCESS - App Deployed Successfully'
+        }
+        failure {
+            echo 'PIPELINE FAILED - Check Console Output'
+        }
+        always {
+            echo 'Cleaning Workspace...'
+            cleanWs()
         }
     }
 }
